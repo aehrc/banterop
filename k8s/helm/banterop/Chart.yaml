@@ -1,0 +1,9 @@
+apiVersion: v2
+name: banterop
+description: A Helm chart for Banterop application
+type: application
+version: 0.1.0
+appVersion: "main"
+home: https://github.com/jmandel/banterop
+sources:
+  - https://github.com/jmandel/banterop
