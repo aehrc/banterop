@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banterop-api
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: banterop-api
+  template:
+    metadata:
+      labels:
+        app: banterop-api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: api
+          image: {{ .Values.banterop.image | quote }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          volumeMounts: {{ toJson .Values.banterop.volumeMounts }}
+          env:
+          {{- range $configKey, $configValue := .Values.banterop.config }}
+            - name: {{ $configKey }}
+              value: {{ $configValue | quote }}
+          {{- end }}
+          {{- range $configKey, $configValue := .Values.banterop.secretConfig }}
+            - name: {{ $configKey }}
+              valueFrom:
+                secretKeyRef:
+                  name: banterop-secrets
+                  key: {{ $configKey }}
+          {{- end }}
+          resources:
+            requests: {{ toJson .Values.banterop.resources.requests }}
+            limits: {{ toJson .Values.banterop.resources.limits }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes: {{ toJson .Values.banterop.volumes }}
+      imagePullSecrets: {{ toJson .Values.banterop.imagePullSecrets }}
+      tolerations: {{ toJson .Values.banterop.tolerations }}
+      affinity: {{ toJson .Values.banterop.affinity }}

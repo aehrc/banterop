@@ -1,0 +1,31 @@
+banterop:
+  image: ghcr.io/jmandel/banterop:main
+  volumeMounts:
+    - name: data
+      mountPath: /data
+    - name: public
+      mountPath: /app/public
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: banterop-db
+    - name: public
+      emptyDir: {}
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  storageClassName: ""
+  config:
+    PORT: "3000"
+    BANTEROP_DB: "/data/banterop.db"
+    DEFAULT_LLM_PROVIDER: "openrouter"
+    DEFAULT_LLM_MODEL: "gpt-oss-120b:nitro"
+    BASE_URL: "https://banterop.fhir.me"
+    BANTEROP_EVENTS_MAX: "5000"
+  secretConfig: {}
+  # secretConfig:
+  #   OPENROUTER_API_KEY: "[your-key]"
