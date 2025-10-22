@@ -21,10 +21,20 @@ function ensureLinksOpenInNewTab(html: string): string {
 
 export function Markdown({ text, className }:{ text?: string; className?: string }) {
   const html = React.useMemo(() => {
+    // Convert literal \n escape sequences to actual newlines before parsing.
+    const normalized = String(text ?? '').replace(/\\n/g, '\n');
+
     try {
-      const raw = marked.parse(String(text ?? '')) as string;
+      const raw = marked.parse(normalized) as string;
       return ensureLinksOpenInNewTab(raw);
-    } catch { return String(text ?? ''); }
+    } catch {
+      // Fallback: escape HTML and preserve newlines.
+      return normalized
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+    }
   }, [text]);
   return <div className={className || 'markdown'} dangerouslySetInnerHTML={{ __html: html }} />;
 }
